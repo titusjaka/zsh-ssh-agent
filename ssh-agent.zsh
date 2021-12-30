@@ -12,8 +12,22 @@ function start_ssh_agent() {
 
 	zstyle -a :plugins:ssh-agent identities identities
 
+	if [[ ${#identities} -eq 0 ]]; then
+		# key list found on `ssh-add` man page's DESCRIPTION section
+		for id in id_rsa id_dsa id_ecdsa id_ed25519 identity; do
+		# check if file exists
+			[[ -f "$HOME/.ssh/$id" ]] && identities+=($id)
+		done
+	fi
+
+	zstyle -a :plugins:ssh-agent smart_cards smart_cards
+
 	echo starting ssh-agent...
 	ssh-add $HOME/.ssh/${^identities}
+
+	if [[ ${#smart_cards} -gt 0 ]]; then
+		ssh-add -s ${^smart_cards}
+	fi
 }
 
 ssh_environment="$HOME/.ssh/environment-$HOST"
